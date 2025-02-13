@@ -8,18 +8,25 @@ CREATE TABLE Productos (
     codigo INT UNIQUE NOT NULL,
     nombre VARCHAR(50) NOT NULL,
     stock INT NOT NULL,
-    precio DECIMAL(10,2) NOT NULL,
+    precioUnitario DECIMAL(10,2) NOT NULL,
     categoria_id INT NOT NULL,
     FOREIGN KEY (categoria_id) REFERENCES Categorias(id) ON UPDATE CASCADE
 );
 
-CREATE TABLE Pedido (
+CREATE TABLE Pedido ( -- Contiene información general de el pedido
   id INT PRIMARY KEY AUTO_INCREMENT,
-  codigoProducto INT,
-  cantidad INT NOT NULL CHECK(cantidad > 0),
-  precioTotal DECIMAL(10,2) NOT NULL,
-  fecha DATE NOT NULL,
-  FOREIGN KEY (codigoProducto) REFERENCES Productos(codigo) ON UPDATE CASCADE
+  precioTotal DECIMAL(10,2) NOT NULL, -- Precio total de todo el pedido
+  fecha DATE NOT NULL  
+);
+
+CREATE TABLE Pedido_Productos( -- Contiene informacion especifica de cada producto pedido
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    idPedido INT,
+    idProducto,
+    cantidad INT NOT NULL CHECK(cantidad > 0),
+    precioXproducto DECIMAL(10,2) NOT NULL, -- Precio total del pedido por producto (precioUnitario * cantidad) 
+    FOREIGN KEY (idProducto) REFERENCES Productos(id) ON UPDATE CASCADE,
+    FOREIGN KEY (idPedido) REFERENCES Pedido(id) ON UPDATE CASCADE
 );
 
 INSERT INTO Categorias (nombre) VALUES ('bebidas'), ('comida');
