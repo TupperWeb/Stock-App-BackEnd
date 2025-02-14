@@ -22,7 +22,7 @@ CREATE TABLE Pedido ( -- Contiene información general de el pedido
 CREATE TABLE Pedido_Productos( -- Contiene informacion especifica de cada producto pedido
     id INT PRIMARY KEY AUTO_INCREMENT,
     idPedido INT,
-    idProducto,
+    idProducto INT,
     cantidad INT NOT NULL CHECK(cantidad > 0),
     precioXproducto DECIMAL(10,2) NOT NULL, -- Precio total del pedido por producto (precioUnitario * cantidad) 
     FOREIGN KEY (idProducto) REFERENCES Productos(id) ON UPDATE CASCADE,
