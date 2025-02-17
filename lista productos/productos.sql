@@ -83,7 +83,7 @@ CREATE PROCEDURE SumarTotal(IN pedidoId INT)
 BEGIN
   UPDATE Pedido
   SET precioTotal = (
-    SELECT INFULL(SUM(precioXproducto), 0)
+    SELECT IFNULL(SUM(precioXproducto), 0)
     FROM Pedido_Productos
     WHERE idPedido = pedidoId
   )
