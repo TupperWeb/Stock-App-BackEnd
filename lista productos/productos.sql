@@ -1,4 +1,5 @@
 -- 1. CREACIÓN DE TABLAS
+
 CREATE TABLE Categorias (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(50) UNIQUE NOT NULL
@@ -71,5 +72,34 @@ INSERT INTO Productos (nombre, stock, precioUnitario, categoria_id) VALUES --No 
 ('Harina', 40, 1700, 2),
 ('Levadura', 50, 1000, 2);
 
--- 3. PROCEDIMIENTO: Se encargará de verificar si hay stock del producto pedido, si no hay inserta los datos en la tabla Reponer_Stock
+-- 3. PROCEDIMIENTO: Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. Si hay stock, lo descontara de la tabla Productos.
+
+DELIMITER $$
+
+CREATE PROCEDURE VerificarStockYPedir(IN pedido_id INT)
+BEGIN
+    START TRANSACTION;
+
+    -- Insertar o actualizar productos con stock insuficiente en Reponer_Stock
+    INSERT INTO Reponer_Stock (idProducto, cantidad)
+    SELECT 
+        p.id AS idProducto, 
+        ABS(p.stock - pp.cantidad) AS cantidad
+    FROM Pedido_Productos pp
+    JOIN Productos p ON pp.idProducto = p.id
+    WHERE pp.idPedido = pedido_id AND p.stock < pp.cantidad
+    ON DUPLICATE KEY UPDATE 
+        cantidad = cantidad + VALUES(cantidad);
+
+    -- Descontar stock solo de los productos que tienen stock suficiente
+    UPDATE Productos p
+    JOIN Pedido_Productos pp ON p.id = pp.idProducto
+    SET p.stock = p.stock - pp.cantidad
+    WHERE pp.idPedido = pedido_id AND p.stock >= pp.cantidad;
+
+    COMMIT;
+
+END $$
+
+DELIMITER ;
 
