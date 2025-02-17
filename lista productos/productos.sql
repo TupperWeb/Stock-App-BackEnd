@@ -94,8 +94,9 @@ DELIMITER ;
 
 
 -- 2. VerificarStockYPedir: 
--- Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. Si hay stock, lo descontara de la tabla Productos.
--- Luego de hacer un pedido llamamos al procedimiento: CALL VerificarStockYPedir(1)
+-- Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. 
+-- Si hay stock, lo descontara de la tabla Productos.
+-- Luego de finalizar un pedido llamamos al procedimiento y le pasamos el id general del pedido, es decir el id de la tabla Pedido: CALL VerificarStockYPedir(id)
 DELIMITER $$
 
 CREATE PROCEDURE VerificarStockYPedir(IN pedido_id INT)
