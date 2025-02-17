@@ -75,7 +75,7 @@ INSERT INTO Productos (nombre, stock, precioUnitario, categoria_id) VALUES --No 
 -- 3. PROCEDIMIENTOS
 
 -- 1. SumarTotal: 
--- Para realizar un pedido primero debemos hacer un insert sin valores en la tabla Pedido para poder generar el ID (INSERT INTO Pedido (precioTotal) VALUES (NULL);). 
+-- Para realizar un pedido primero debemos hacer un insert sin valores en la tabla Pedido para poder generar el ID (INSERT INTO Pedido VALUES ()). 
 -- Una vez generado el ID, hacemos el pedido de cada producto mediante inserts en la tabla Pedido_Productos, ingresando en idPedido el ID obtenido. 
 -- Luego de pedir todos los productos llamamos al procedimiento SumarTotal pasandole por parametro el ID de la tabla Pedido (CALL SumarTotal(id);) , este se encargara de sumar todos los precioXproducto de cada producto del pedido y hara un update en la tabla Pedido actualizando el valor precioTotal obtenido de esta suma.
 DELIMITER $$
