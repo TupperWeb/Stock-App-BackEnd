@@ -73,23 +73,26 @@ INSERT INTO Productos (nombre, stock, precioUnitario, categoria_id) VALUES --No 
 ('Levadura', 50, 1000, 2);
 
 -- 3. PROCEDIMIENTO: Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. Si hay stock, lo descontara de la tabla Productos.
+-- Luego de hacer un pedido llamamos al procedimiento: CALL VerificarStockYPedir(1)
+
 
 DELIMITER $$
 
 CREATE PROCEDURE VerificarStockYPedir(IN pedido_id INT)
 BEGIN
+    
     START TRANSACTION;
 
     -- Insertar o actualizar productos con stock insuficiente en Reponer_Stock
     INSERT INTO Reponer_Stock (idProducto, cantidad)
     SELECT 
         p.id AS idProducto, 
-        ABS(p.stock - pp.cantidad) AS cantidad
+        ABS(p.stock - pp.cantidad) AS cantidadFaltante
     FROM Pedido_Productos pp
     JOIN Productos p ON pp.idProducto = p.id
     WHERE pp.idPedido = pedido_id AND p.stock < pp.cantidad
     ON DUPLICATE KEY UPDATE 
-        cantidad = cantidad + VALUES(cantidad);
+        cantidad = Reponer_Stock.cantidad + VALUES(cantidad);
 
     -- Descontar stock solo de los productos que tienen stock suficiente
     UPDATE Productos p
@@ -97,7 +100,7 @@ BEGIN
     SET p.stock = p.stock - pp.cantidad
     WHERE pp.idPedido = pedido_id AND p.stock >= pp.cantidad;
 
-    COMMIT;
+    COMMIT; 
 
 END $$
 
