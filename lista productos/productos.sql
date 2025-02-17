@@ -15,13 +15,13 @@ CREATE TABLE Productos (
     FOREIGN KEY (categoria_id) REFERENCES Categorias(id) ON UPDATE CASCADE
 );
 
-CREATE TABLE Pedido ( -- Contiene información general de el pedido
+CREATE TABLE Pedido ( -- Informacion general del pedido total
   id INT PRIMARY KEY AUTO_INCREMENT,
-  precioTotal DECIMAL(10,2) NOT NULL, -- Precio total de todo el pedido
+  precioTotal DECIMAL(10,2), -- Precio total de todo el pedido, al principio es NULL y con el procedimiento se ingresa el valor final.
   fecha DATE NOT NULL DEFAULT (CURRENT_DATE) -- Inserta la fecha actual 
 );
 
-CREATE TABLE Pedido_Productos( -- Contiene informacion especifica de cada producto pedido
+CREATE TABLE Pedido_Productos( -- Informacion especifica de cada producto pedido
     id INT PRIMARY KEY AUTO_INCREMENT,
     idPedido INT,
     idProducto INT,
@@ -72,10 +72,30 @@ INSERT INTO Productos (nombre, stock, precioUnitario, categoria_id) VALUES --No 
 ('Harina', 40, 1700, 2),
 ('Levadura', 50, 1000, 2);
 
--- 3. PROCEDIMIENTO: Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. Si hay stock, lo descontara de la tabla Productos.
+-- 3. PROCEDIMIENTOS
+
+-- 1. SumarTotal: 
+-- Para realizar un pedido primero debemos hacer un insert sin valores en la tabla Pedido para poder generar el ID (INSERT INTO Pedido (precioTotal) VALUES (NULL);). 
+-- Una vez generado el ID, hacemos el pedido de cada producto mediante inserts en la tabla Pedido_Productos, ingresando en idPedido el ID obtenido. 
+-- Luego de pedir todos los productos llamamos al procedimiento SumarTotal pasandole por parametro el ID de la tabla Pedido (CALL SumarTotal(id);) , este se encargara de sumar todos los precioXproducto de cada producto del pedido y hara un update en la tabla Pedido actualizando el valor precioTotal obtenido de esta suma.
+DELIMITER $$
+CREATE PROCEDURE SumarTotal(IN pedidoId INT)
+BEGIN
+  UPDATE Pedido
+  SET precioTotal = (
+    SELECT INFULL(SUM(precioXproducto), 0)
+    FROM Pedido_Productos
+    WHERE idPedido = pedidoId
+  )
+  WHERE id = pedidoId;
+END$$
+DELIMITER ;
+
+
+
+-- 2. VerificarStockYPedir: 
+-- Se encargará de verificar si en un pedido realizado hay stock necesario de los productos, si no hay, calcula cuanto stock falta e inserta los datos en la tabla Reponer_Stock. Si hay stock, lo descontara de la tabla Productos.
 -- Luego de hacer un pedido llamamos al procedimiento: CALL VerificarStockYPedir(1)
-
-
 DELIMITER $$
 
 CREATE PROCEDURE VerificarStockYPedir(IN pedido_id INT)
