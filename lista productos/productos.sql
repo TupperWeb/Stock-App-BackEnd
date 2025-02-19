@@ -19,6 +19,7 @@ CREATE TABLE Pedido ( -- Informacion general del pedido total
   id INT PRIMARY KEY AUTO_INCREMENT,
   precioTotal DECIMAL(10,2), -- Precio total de todo el pedido, al principio es NULL y con el procedimiento se ingresa el valor final.
   fecha DATE NOT NULL DEFAULT (CURRENT_DATE) -- Inserta la fecha actual 
+  estado ENUM('Confirmado', 'En espera de stock') DEFAULT '-',
 );
 
 CREATE TABLE Pedido_Productos( -- Informacion especifica de cada producto pedido
@@ -33,9 +34,11 @@ CREATE TABLE Pedido_Productos( -- Informacion especifica de cada producto pedido
 
 CREATE TABLE Reponer_Stock ( -- Cuando se quiere realizar un pedido y no hay stock suficiente se carga el producto y la cantidad a reponer. (tendris que tener el id dep pedido? o el pedido no se realiza)
 id INT PRIMARY KEY AUTO_INCREMENT,
-idProducto INT UNIQUE,  -- Se mantiene único por producto para evitar duplicados
+idPedido INT,
+idProducto INT,
 cantidad INT NOT NULL CHECK(cantidad > 0),
-FOREIGN KEY (idProducto) REFERENCES Productos(id) ON UPDATE CASCADE
+FOREIGN KEY (idProducto) REFERENCES Productos(id) ON UPDATE CASCADE,
+FOREIGN KEY (idPedido) REFERENCES Pedido(id) ON UPDATE CASCADE
 );
 
 -- 2. INSERTAR DATOS PRINCIPALES
@@ -101,12 +104,12 @@ DELIMITER $$
 
 CREATE PROCEDURE VerificarStockYPedir(IN pedido_id INT)
 BEGIN
-    
     START TRANSACTION;
 
     -- Insertar o actualizar productos con stock insuficiente en Reponer_Stock
-    INSERT INTO Reponer_Stock (idProducto, cantidad)
+    INSERT INTO Reponer_Stock (idPedido, idProducto, cantidad)
     SELECT 
+        pedido_id,          
         p.id AS idProducto, 
         ABS(p.stock - pp.cantidad) AS cantidadFaltante
     FROM Pedido_Productos pp
@@ -122,7 +125,34 @@ BEGIN
     WHERE pp.idPedido = pedido_id AND p.stock >= pp.cantidad;
 
     COMMIT; 
+END $$
 
+DELIMITER ;
+
+
+-- 3. ActualizarEstadoPedido:
+-- Una vez verificado el stock, se encarga de actualizar el estado del pedido.
+-- Si alguno de los productos del pedido no tiene stock suficiente, es decir esta en la tabla Reponer_Stock, actualiza el estado del pedido a "En espera de stock".
+-- Si ninguno de los productos esta en la tabla Reponer_Stock, actualiza el estado a "Confirmado".
+
+DELIMITER $$
+
+CREATE PROCEDURE ActualizarEstadoPedido(IN pedido_id INT)
+BEGIN
+    DECLARE stock_insuficiente INT DEFAULT 0;
+
+    -- Verificar si algún producto de este pedido está en Reponer_Stock
+    SELECT COUNT(*) INTO stock_insuficiente
+    FROM Reponer_Stock
+    WHERE idPedido = pedido_id;
+
+    -- Si hay productos en Reponer_Stock, estado = 'En espera de stock'
+    -- Si no hay productos en Reponer_Stock, estado = 'Confirmado'
+    IF stock_insuficiente > 0 THEN
+        UPDATE Pedido SET estado = 'En espera de stock' WHERE id = pedido_id;
+    ELSE
+        UPDATE Pedido SET estado = 'Confirmado' WHERE id = pedido_id;
+    END IF;
 END $$
 
 DELIMITER ;
