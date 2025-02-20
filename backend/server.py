@@ -19,7 +19,7 @@ def get_dbConnection():
 
 #getters 
 
-@app.route('/protuctos', methods=['GET'])
+@app.route('/productos', methods=['GET'])
 def get_productos():
     
         db = get_dbConnection()
