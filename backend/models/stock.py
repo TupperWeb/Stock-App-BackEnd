@@ -48,7 +48,7 @@ class Producto:
         self.__id = cursor.lastrowid
         #self.__codigo = cursor.#?????????????
         db.close()
-        #return self.__id#????)
+        return self.__codigo
 #PUT
     def actualizar(self):
         db = get_dbConnection()
