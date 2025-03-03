@@ -9,6 +9,9 @@ class Producto:
         self.__precioUnitario = precioUnitario
         self.__categoriaId = categoria_id
 
+    def obtenerId(self):
+        return self.__id
+
 # GET 
     @staticmethod
     def obtener_todos(): # Retorna todos los productos de la tabla Productos
@@ -32,7 +35,7 @@ class Producto:
     def obtener_por_codigo(codigo): # Retorna un producto que corresponda con el codigo ingresado
         db = get_dbConnection()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM Productos WHERE codigo = %s", (id,))
+        cursor.execute("SELECT * FROM Productos WHERE codigo = %s", (codigo,))
         producto = cursor.fetchone()
         db.close()
         return producto
@@ -46,7 +49,9 @@ class Producto:
         )
         db.commit()
         self.__id = cursor.lastrowid
-        #self.__codigo = cursor.#?????????????
+        # Recuperar el código generado automáticamente
+        cursor.execute("SELECT codigo FROM Productos WHERE id = %s", (self.__id,))
+        self.__codigo = cursor.fetchone()[0]
         db.close()
         return self.__codigo
 #PUT
